@@ -6,3 +6,5 @@ This plugin utilizes Obsidian's *built-in* bidirectional text support to provide
 * `Right Ctrl + Right Shift`: Make current line flow from right to left
 
 This plugin works by inserting/removing invisible Unicode control characters within the text, which means your documents **render correctly** not only in Obsidian but also in **ANY** markdown/text editor that follows [Unicode BiDi standards](https://en.wikipedia.org/wiki/Bidirectional_text)!
+
+> This plugin only makes sense to use in Obsidian 1.6.0 or newer, since that is when Obsidian added per-line directionality.
