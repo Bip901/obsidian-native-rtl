@@ -3,7 +3,7 @@
 	"name": "Obsidian Native RTL",
 	"version": "1.0.0",
 	"minAppVersion": "1.6.0",
-	"description": "Intuitive Right/Left directionality per-line, as is common in programs like Notepad.",
+	"description": "Intuitive Right/Left directionality per-line via Left/Right Ctrl+Shift.",
 	"author": "Ori Almagor",
 	"authorUrl": "https://github.com/Bip901/obsidian-native-rtl",
 	"fundingUrl": "https://github.com/Bip901/obsidian-native-rtl",

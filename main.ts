@@ -27,7 +27,7 @@ export default class NativeRTLPlugin extends Plugin {
 		this.ctrlShiftPending = (event.key === "Shift" && event.ctrlKey) || (event.key == "Control" && event.shiftKey);
 	};
 
-	private onKeyUp = (event: KeyboardEvent) => {
+	private onKeyUp = (event: KeyboardEvent): void => {
 		if (!this.ctrlShiftPending) {
 			return;
 		}
@@ -39,17 +39,28 @@ export default class NativeRTLPlugin extends Plugin {
 		if (!activeView) {
 			return;
 		}
-		const startOfLine: EditorPosition = { ...activeView.editor.getCursor(), ch: 0 };
-		const codeMirror: EditorView = (activeView.editor as any).cm;
-		const lineDirection = codeMirror.textDirectionAt(activeView.editor.posToOffset(startOfLine));
-		const desiredDirection = event.location == KeyboardEvent.DOM_KEY_LOCATION_RIGHT ? Direction.RTL : Direction.LTR;
-		if (desiredDirection !== lineDirection) {
-			this.ensureFlowDirection(activeView.editor, startOfLine, desiredDirection);
-		}
+		this.ensureFlowDirectionPerSelectedLine(
+			activeView.editor,
+			event.location == KeyboardEvent.DOM_KEY_LOCATION_RIGHT ? Direction.RTL : Direction.LTR
+		);
 	};
 
-	private ensureFlowDirection(editor: Editor, startOfLine: EditorPosition, desiredDirection: number) {
-		console.log("Desired direction: " + desiredDirection);
+	private ensureFlowDirectionPerSelectedLine(editor: Editor, desiredDirection: Direction): void {
+		const codeMirror: EditorView = (editor as any).cm;
+		for (const selection of editor.listSelections()) {
+			const startLine = Math.min(selection.anchor.line, selection.head.line);
+			const endLine = Math.max(selection.anchor.line, selection.head.line);
+			for (let line = startLine; line <= endLine; line++) {
+				const startOfLine: EditorPosition = { line: line, ch: 0 };
+				const lineDirection = codeMirror.textDirectionAt(editor.posToOffset(startOfLine));
+		if (desiredDirection !== lineDirection) {
+					this.ensureFlowDirection(editor, startOfLine, desiredDirection);
+		}
+			}
+		}
+	}
+
+	private ensureFlowDirection(editor: Editor, startOfLine: EditorPosition, desiredDirection: Direction): void {
 		const lineIndex = startOfLine.line;
 		const lineContent = editor.getLine(lineIndex);
 		const oppositeMark = desiredDirection == Direction.LTR ? RTL_MARK : LTR_MARK;
