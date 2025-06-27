@@ -12,13 +12,13 @@ export default class NativeRTLPlugin extends Plugin {
 	private settings: NativeRTLPluginSettings;
 	private ctrlShiftPending: boolean = false;
 
-	async onload() {
+	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.app.workspace.containerEl.addEventListener("keydown", this.onKeyDown);
 		this.app.workspace.containerEl.addEventListener("keyup", this.onKeyUp);
 	}
 
-	private onKeyDown = (event: KeyboardEvent) => {
+	private onKeyDown = (event: KeyboardEvent): void => {
 		if (event.altKey) {
 			return;
 		}
@@ -53,9 +53,9 @@ export default class NativeRTLPlugin extends Plugin {
 			for (let line = startLine; line <= endLine; line++) {
 				const startOfLine: EditorPosition = { line: line, ch: 0 };
 				const lineDirection = codeMirror.textDirectionAt(editor.posToOffset(startOfLine));
-		if (desiredDirection !== lineDirection) {
+				if (desiredDirection !== lineDirection) {
 					this.ensureFlowDirection(editor, startOfLine, desiredDirection);
-		}
+				}
 			}
 		}
 	}
@@ -85,16 +85,16 @@ export default class NativeRTLPlugin extends Plugin {
 		editor.replaceRange(desiredMark, startOfLine);
 	}
 
-	onunload() {
+	onunload(): void {
 		this.app.workspace.containerEl.removeEventListener("keydown", this.onKeyDown);
 		this.app.workspace.containerEl.removeEventListener("keyup", this.onKeyUp);
 	}
 
-	async loadSettings() {
+	async loadSettings(): Promise<void> {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
-	async saveSettings() {
+	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
 	}
 }
