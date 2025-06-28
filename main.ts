@@ -1,17 +1,25 @@
 import { Direction, EditorView } from "@codemirror/view";
-import { Editor, EditorPosition, MarkdownView, Plugin } from "obsidian";
+import { Editor, EditorPosition, MarkdownView, Platform, Plugin } from "obsidian";
 
 export default class NativeRTLPlugin extends Plugin {
+	private readonly openingBrackets = ["(", "[", "<", "{"];
+	private readonly closingBrackets = [")", "]", ">", "}"];
 	private ctrlShiftPending: boolean = false;
 
 	onload(): void {
 		this.app.workspace.containerEl.addEventListener("keydown", this.onKeyDown);
 		this.app.workspace.containerEl.addEventListener("keyup", this.onKeyUp);
+		if (Platform.isMobile) {
+			this.app.workspace.containerEl.addEventListener("input", this.onInput);
+		}
 	}
 
 	onunload(): void {
 		this.app.workspace.containerEl.removeEventListener("keydown", this.onKeyDown);
 		this.app.workspace.containerEl.removeEventListener("keyup", this.onKeyUp);
+		if (Platform.isMobile) {
+			this.app.workspace.containerEl.removeEventListener("input", this.onInput);
+		}
 	}
 
 	private onKeyDown = (event: KeyboardEvent): void => {
@@ -167,4 +175,45 @@ export default class NativeRTLPlugin extends Plugin {
 		}
 		editor.replaceRange(desiredMark, start);
 	}
+
+	private onInput = (event: InputEvent): void => {
+		if (event.inputType !== "insertText" || event.data?.length !== 1) {
+			return;
+		}
+		const openingBracketIndex = this.openingBrackets.indexOf(event.data);
+		const closingBracketIndex = this.closingBrackets.indexOf(event.data);
+		if (openingBracketIndex === -1 && closingBracketIndex === -1) {
+			return;
+		}
+		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!activeView) {
+			return;
+		}
+		const codeMirror: EditorView = (activeView.editor as any).cm;
+		const lineDirection = codeMirror.textDirectionAt(activeView.editor.posToOffset(activeView.editor.getCursor()));
+		if (lineDirection === Direction.LTR) {
+			return;
+		}
+		event.preventDefault();
+		event.stopPropagation();
+		if (openingBracketIndex !== -1) {
+			activeView.editor.replaceSelection(this.closingBrackets[openingBracketIndex]);
+		} else {
+			const autoPairBrackets = (this.app.vault as any).getConfig("autoPairBrackets");
+			if (autoPairBrackets && this.openingBrackets[closingBracketIndex] !== "<") {
+				const previousSelection = activeView.editor.listSelections()[0];
+				const selectionContent = activeView.editor.getSelection();
+				activeView.editor.replaceSelection(
+					this.openingBrackets[closingBracketIndex] +
+						selectionContent +
+						this.closingBrackets[closingBracketIndex]
+				);
+				previousSelection.anchor.ch++;
+				previousSelection.head.ch++;
+				activeView.editor.setSelection(previousSelection.anchor, previousSelection.head);
+			} else {
+				activeView.editor.replaceSelection(this.openingBrackets[closingBracketIndex]);
+			}
+		}
+	};
 }
