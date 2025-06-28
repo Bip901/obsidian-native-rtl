@@ -11,6 +11,7 @@ const DEFAULT_SETTINGS: NativeRTLPluginSettings = {};
 export default class NativeRTLPlugin extends Plugin {
 	private settings: NativeRTLPluginSettings;
 	private ctrlShiftPending: boolean = false;
+	private tableNoticeShown: boolean = false;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -58,13 +59,17 @@ export default class NativeRTLPlugin extends Plugin {
 				}
 			}
 		}
+		this.tableNoticeShown = false;
 	}
 
 	private ensureFlowDirection(editor: Editor, startOfLine: EditorPosition, desiredDirection: Direction): void {
 		const lineIndex = startOfLine.line;
 		const lineContent = editor.getLine(lineIndex);
 		if (lineContent.startsWith("|")) {
-			new Notice("Obsidian Native RTL: Tables are not supported yet.", 2500);
+			if (!this.tableNoticeShown) {
+				new Notice("Obsidian Native RTL: Tables are not supported yet.", 2500);
+				this.tableNoticeShown = true;
+			}
 			return;
 		}
 
