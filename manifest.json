@@ -1,7 +1,7 @@
 {
 	"id": "native-rtl",
 	"name": "Native RTL",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "1.6.0",
 	"description": "Intuitive Right/Left directionality per-line via Left/Right Ctrl+Shift.",
 	"author": "Ori Almagor",
