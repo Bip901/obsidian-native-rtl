@@ -1,5 +1,5 @@
 import { Direction, EditorView } from "@codemirror/view";
-import { Editor, EditorPosition, MarkdownView, Plugin } from "obsidian";
+import { Editor, EditorPosition, MarkdownView, Notice, Plugin } from "obsidian";
 
 const LTR_MARK = "\u200E";
 const RTL_MARK = "\u200F";
@@ -63,24 +63,35 @@ export default class NativeRTLPlugin extends Plugin {
 	private ensureFlowDirection(editor: Editor, startOfLine: EditorPosition, desiredDirection: Direction): void {
 		const lineIndex = startOfLine.line;
 		const lineContent = editor.getLine(lineIndex);
-		const oppositeMark = desiredDirection == Direction.LTR ? RTL_MARK : LTR_MARK;
-		const firstOppositeMarkIndex = lineContent.indexOf(oppositeMark);
-		if (firstOppositeMarkIndex != -1) {
+		if (lineContent.startsWith("|")) {
+			new Notice("Obsidian Native RTL: Tables are not supported yet.", 2500);
+			return;
+		}
+
+		let directionMarksMatches = null;
+		if (desiredDirection === Direction.LTR) {
+			directionMarksMatches = lineContent.match(
+				/^([^\p{Script=Hebrew}\p{Script=Arabic}\p{Script=Thaana}\p{Script=Syriac}]*)(\u200F+)/u
+			);
+		} else {
+			directionMarksMatches = lineContent.match(/^(.*?)(\u200E+)/);
+		}
+		if (directionMarksMatches) {
 			editor.replaceRange(
 				"",
-				{ line: lineIndex, ch: firstOppositeMarkIndex },
-				{ line: lineIndex, ch: firstOppositeMarkIndex + 1 }
+				{ line: lineIndex, ch: directionMarksMatches[1].length },
+				{ line: lineIndex, ch: directionMarksMatches[1].length + directionMarksMatches[2].length }
 			);
 			return;
 		}
 		const desiredMark = desiredDirection == Direction.LTR ? LTR_MARK : RTL_MARK;
 		// The mark should be inserted AFTER the following special prefixes:
 		// bullet points, checklist items, numbered items, headings, callouts, footnotes.
-		const matches = lineContent.match(
+		const specialPrefixMatches = lineContent.match(
 			/^(?:\s*[-*](?:\s+\[[^\[\]]\])?|[1-9][0-9]*[\).]|\#+|\s*>|\[\^[0-9]+\]:\s*)\s+/
 		);
-		if (matches && matches.length) {
-			startOfLine.ch = matches[0].length;
+		if (specialPrefixMatches && specialPrefixMatches.length) {
+			startOfLine.ch = specialPrefixMatches[0].length;
 		}
 		editor.replaceRange(desiredMark, startOfLine);
 	}
