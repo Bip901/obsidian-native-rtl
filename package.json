@@ -1,6 +1,6 @@
 {
 	"name": "native-rtl",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"description": "Intuitive Right/Left directionality per-line via Left/Right Ctrl+Shift.",
 	"main": "main.js",
 	"scripts": {
