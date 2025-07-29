@@ -1,4 +1,4 @@
-# Obsidian Native RTL
+# Native RTL
 
 This plugin utilizes Obsidian's *built-in* bidirectional text support to provide intuitive Right-To-Left and Left-To-Right directionality **per-line**.
 
