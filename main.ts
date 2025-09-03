@@ -126,7 +126,8 @@ export default class NativeRTLPlugin extends Plugin {
 	private flipLine(editor: Editor, line: number, desiredDirection: Direction) {
 		// RTL/LTR marks should be inserted AFTER the following special prefixes:
 		// bullet points, checklist items, numbered items, headings, callouts, footnotes.
-		const specialPrefixRegex = /^(?:\s*[-*](?:\s+\[[^\[\]]\])?|[1-9][0-9]*[\).]|\#+|\s*>|\[\^[0-9]+\]:\s*)\s+/;
+		const specialPrefixRegex =
+			/^(?:\s*(?:[-*]|[0-9]+[\).])(?:\s+\[[^\[\]]\])?|\#+|\s*>(?:\s\[![a-zA-Z]+\])?|\[\^[0-9]+\]:\s*)\s+/;
 		this.flipString(editor, editor.getLine(line), { line: line, ch: 0 }, desiredDirection, specialPrefixRegex);
 	}
 
