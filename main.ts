@@ -49,8 +49,12 @@ export default class NativeRTLPlugin extends Plugin {
 		);
 	};
 
+	private getCodeMirror(editor: Editor): EditorView {
+		return (editor as unknown as { cm: EditorView }).cm;
+	}
+
 	private ensureFlowDirectionPerSelectedLine(editor: Editor, desiredDirection: Direction): void {
-		const codeMirror: EditorView = (editor as any).cm;
+		const codeMirror = this.getCodeMirror(editor);
 		for (const selection of editor.listSelections()) {
 			const startLine = Math.min(selection.anchor.line, selection.head.line);
 			const endLine = Math.max(selection.anchor.line, selection.head.line);
@@ -127,7 +131,7 @@ export default class NativeRTLPlugin extends Plugin {
 		// RTL/LTR marks should be inserted AFTER the following special prefixes:
 		// bullet points, checklist items, numbered items, headings, callouts, footnotes.
 		const specialPrefixRegex =
-			/^(?:\s*(?:[-*]|[0-9]+[\).])(?:\s+\[[^\[\]]\])?|\#+|\s*>(?:\s\[![a-zA-Z]+\])?|\[\^[0-9]+\]:\s*)\s+/;
+			/^(?:\s*(?:[-*]|[0-9]+[).])(?:\s+\[[^[\]]\])?|#+|\s*>(?:\s\[![a-zA-Z]+\])?|\[\^[0-9]+\]:\s*)\s+/;
 		this.flipString(editor, editor.getLine(line), { line: line, ch: 0 }, desiredDirection, specialPrefixRegex);
 	}
 
@@ -190,8 +194,9 @@ export default class NativeRTLPlugin extends Plugin {
 		if (!activeView) {
 			return;
 		}
-		const codeMirror: EditorView = (activeView.editor as any).cm;
-		const lineDirection = codeMirror.textDirectionAt(activeView.editor.posToOffset(activeView.editor.getCursor()));
+		const lineDirection = this.getCodeMirror(activeView.editor).textDirectionAt(
+			activeView.editor.posToOffset(activeView.editor.getCursor())
+		);
 		if (lineDirection === Direction.LTR) {
 			return;
 		}
@@ -200,7 +205,8 @@ export default class NativeRTLPlugin extends Plugin {
 		if (openingBracketIndex !== -1) {
 			activeView.editor.replaceSelection(this.closingBrackets[openingBracketIndex]);
 		} else {
-			const autoPairBrackets = (this.app.vault as any).getConfig("autoPairBrackets");
+			const vault = this.app.vault as unknown as { getConfig: (key: string) => boolean };
+			const autoPairBrackets = vault.getConfig("autoPairBrackets");
 			if (autoPairBrackets && this.openingBrackets[closingBracketIndex] !== "<") {
 				const previousSelection = activeView.editor.listSelections()[0];
 				const selectionContent = activeView.editor.getSelection();
